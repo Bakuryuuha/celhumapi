@@ -186,6 +186,31 @@ public class Booking {
             this.dob = dob;
         }
     }
+
+    public static class Kredivopayment{
+        String transaction_id;
+        String signature_key;
+
+        public String getTransaction_id() {
+            return transaction_id;
+        }
+
+        public void setTransaction_id(String transaction_id) {
+            this.transaction_id = transaction_id;
+        }
+
+        public String getSignature_key() {
+            return signature_key;
+        }
+
+        public void setSignature_key(String signature_key) {
+            this.signature_key = signature_key;
+        }
+    }
+
+    public static class Midtrans{
+
+    }
     @Id
     String id;
     String tourid;
@@ -208,6 +233,35 @@ public class Booking {
     TourList.Departure departure;
     Date starttransdate;
     Date endtransdate;
+    String payment_method;
+
+
+    Kredivopayment kredivopayment;
+    Midtrans midtrans;
+
+    public Kredivopayment getKredivopayment() {
+        return kredivopayment;
+    }
+
+    public void setKredivopayment(Kredivopayment kredivopayment) {
+        this.kredivopayment = kredivopayment;
+    }
+
+    public Midtrans getMidtrans() {
+        return midtrans;
+    }
+
+    public void setMidtrans(Midtrans midtrans) {
+        this.midtrans = midtrans;
+    }
+
+    public String getPayment_method() {
+        return payment_method;
+    }
+
+    public void setPayment_method(String payment_method) {
+        this.payment_method = payment_method;
+    }
 
     public Date getStarttransdate() {
         return starttransdate;
