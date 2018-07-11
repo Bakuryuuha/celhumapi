@@ -1,14 +1,12 @@
 package com.api.celhum.controller;
 
 import com.api.celhum.misc.ProjectStatus;
-import com.api.celhum.model.Account;
-import com.api.celhum.model.Booking;
-import com.api.celhum.model.KredivoPayments;
-import com.api.celhum.model.TourList;
+import com.api.celhum.model.*;
 import com.api.celhum.repository.BookingRepository;
 import com.api.celhum.service.AccountService;
 import com.api.celhum.service.BookingRepositoryCustom;
 import com.api.celhum.service.TourListService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static com.api.celhum.misc.GlobalSetting.*;
 
 @RestController
 @RequestMapping(path="/booking", method = GET)
@@ -102,51 +102,13 @@ public class BookingController {
 
         return pvalue;
     }
-
-    @PostMapping("/paymentkredivo")
-    public @ResponseBody
-    ResponseEntity<KredivoPayments> KredivoCheckPayments(@RequestBody KredivoPayments kredivoPayments){
-        //KREDIVO SECTION #POST PAYMENT
-
-        final String uri = " https://sandbox.kredivo.com/kredivo";
-        RestTemplate restTemplate = new RestTemplate();
-        // Add the Jackson message converter
-        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-        // create request body
-        String input = "{" +
-                "\"server_key\":\"8tLHIx8V0N6KtnSpS9Nbd6zROFFJH7\"," +
-                "\"amount\":"+kredivoPayments.getAmount()+"," +
-                "\"items\":[{" +
-                "\"id\":\""+kredivoPayments.getItems().get(0).getId()+"\","+
-                "\"name\":\""+kredivoPayments.getItems().get(0).getId()+"\","+
-                "\"price\":"+kredivoPayments.getItems().get(0).getId()+","+
-                "\"url\":\""+kredivoPayments.getItems().get(0).getId()+"\","+
-                "\"type\":\""+kredivoPayments.getItems().get(0).getId()+"\","+
-                "\"quantity\":"+kredivoPayments.getItems().get(0).getId()+""+
-                "}]" +
-                "}";
-
-
-        // set headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        //headers.set("Authorization", "Basic " + "xxxxxxxxxxxx");
-        HttpEntity<String> entity = new HttpEntity<String>(input, headers);
-
-        // send request and parse result
-        ResponseEntity<KredivoPayments> response = restTemplate
-                .exchange(uri+"/v2/payments ", HttpMethod.POST, entity, KredivoPayments.class);
-
-        return response;
-    }
-
     @PostMapping("/submit")
     public @ResponseBody
-    ResponseEntity<ProjectStatus> BookingSubmit(@RequestBody Booking book){
+    ResponseEntity<ProjectStatus> BookingSubmit(@RequestBody Booking book) throws IOException {
 
         //get single code
         String curCode = book.getDeparture().getCode();
-        book.setTourid(curCode);
+        //book.setTourid(curCode);
         //check tour id if VALID
         TourList curTour = tourListService.findByCodeDepart(curCode);
         if(curTour == null){
@@ -214,15 +176,19 @@ public class BookingController {
         Long childTotal = childAmount * Long.valueOf(priceChild);
         Long extrabedTotal = extraBedAmount * Long.valueOf(priceExtraBed);
         Long singlesupTotal = singleSupAmount * Long.valueOf(priceSingleSup);
+        Long totalPassenger = adultTotal + childTotal;
         Long grandTotal = adultTotal + childTotal + extrabedTotal + singlesupTotal + bookingRepository.countBookingsByBookstatusEquals("pending");
 //       return new ResponseEntity<ProjectStatus>(new ProjectStatus("Inside Looping "+adultAmount,name), HttpStatus.OK);
         // total = k * 9000000 + bookingRepository.countBookingByDepartdateIsBefore(today);
         String totalStr = String.valueOf(grandTotal);
         book.setTotalpayment(totalStr);
 
+        TourList curTour2 = tourListService.findByTourId(book.getTourid());
+
         //find id user and email when submit
         Account curAccount = accountService.findByEmail(book.getEmail());
         book.setOwner(curAccount.getId());
+//        book.setOwner(curTour2.getName());
         book.setPassenger_count(String.valueOf(k));
         book.setBookstatus("pending");
         book.setDepartdate(departure.getDatedepart());
@@ -238,81 +204,126 @@ public class BookingController {
 
         String dateToString = df.format(future);
 
+        if(book.getPayment_method().equals("Kredivo")){
+            //KREDIVO SECTION #POST PAYMENT
+            final String uri2 = "https://sandbox.kredivo.com/kredivo";
+            RestTemplate restTemplate2 = new RestTemplate();
+            restTemplate2.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
-        //KREDIVO SECTION #POST CHECKOUT
-//        final String uri2 = "url";
-//        RestTemplate restTemplate2 = new RestTemplate();
-//        // Add the Jackson message converter
-//        restTemplate2.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-//        // create request body
-//        String input2 = "{" +
-//                "\"server_key\":\"8tLHIx8V0N6KtnSpS9Nbd6zROFFJH7\"," +
-//                "\"payment_type\":\""+grandTotal+"\"," +
-//                    "\"transaction_details\":{" +
-//                        "\"amount\":\""+adultAmount+"\","+
-//                        "\"order_id\":\""+adultAmount+"\","+
-//                        "\"items\":[{" +
-//                                "\"id\":\""+adultAmount+"\","+
-//                                "\"name\":\""+adultAmount+"\","+
-//                                "\"price\":\""+adultAmount+"\","+
-//                                "\"type\":\""+adultAmount+"\","+
-//                                "\"quality\":\""+adultAmount+"\""+
-//                            "}]"+
-//                    "}," +
-//                    "\"sellers\":[{" +
-//                        "\"id\":\""+adultAmount+"\","+
-//                        "\"name\":\""+adultAmount+"\","+
-//                        "\"email\":\""+adultAmount+"\","+
-//                        "\"address\":{"+
-//                            "\"first_name\":\""+adultAmount+"\","+
-//                            "\"last_name\":\""+adultAmount+"\","+
-//                            "\"address\":\""+adultAmount+"\","+
-//                            "\"city\":\""+adultAmount+"\","+
-//                            "\"postal_code\":\""+adultAmount+"\","+
-//                            "\"phone\":\""+adultAmount+"\","+
-//                            "\"country_code\":\""+adultAmount+"\""+
-//                        "}"+
-//                    "}],"+
-//                    "\"customer_details\":{" +
-//                        "\"first_name\":\""+adultAmount+"\","+
-//                        "\"last_name\":\""+adultAmount+"\","+
-//                        "\"email\":\""+adultAmount+"\","+
-//                        "\"phone\":\""+adultAmount+"\""+
-//                    "},"+
-//                    "\"billing_address\":{" +
-//                        "\"first_name\":\""+adultAmount+"\","+
-//                        "\"last_name\":\""+adultAmount+"\","+
-//                        "\"address\":\""+adultAmount+"\","+
-//                        "\"city\":\""+adultAmount+"\","+
-//                        "\"postal_code\":\""+adultAmount+"\","+
-//                        "\"phone\":\""+adultAmount+"\","+
-//                        "\"country_code\":\""+adultAmount+"\""+
-//                    "},"+
-//                    "\"shipping_address\":{" +
-//                        "\"first_name\":\""+adultAmount+"\","+
-//                        "\"last_name\":\""+adultAmount+"\","+
-//                        "\"address\":\""+adultAmount+"\","+
-//                        "\"city\":\""+adultAmount+"\","+
-//                        "\"postal_code\":\""+adultAmount+"\","+
-//                        "\"phone\":\""+adultAmount+"\","+
-//                        "\"country_code\":\""+adultAmount+"\","+
-//                    "},"+
-//                    "\"push_uri\":\""+adultAmount+"\","+
-//                    "\"back_to_store_uri\":\""+adultAmount+"\""+
-//                "}";
-//
-//
-//        // set headers
-//        HttpHeaders headers2 = new HttpHeaders();
-//        headers2.setContentType(MediaType.APPLICATION_JSON);
-//        headers2.set("Authorization", "Basic " + "xxxxxxxxxxxx");
-//        HttpEntity<String> entity2 = new HttpEntity<String>(input, headers);
-//
-//        // send request and parse result
-//        ResponseEntity<String> response2 = restTemplate2
-//                .exchange(uri2, HttpMethod.POST, entity2, String.class);
+            String input3 = "{\n" +
+                    "    \"server_key\":\"8tLHIx8V0N6KtnSpS9Nbd6zROFFJH7\",\n" +
+                    "    \"payment_type\":\"30_days\",  \n" +
+                    "    \"transaction_details\": {\n" +
+                    "        \"amount\":"+totalStr+",\n" +
+                    "        \"order_id\":\""+book.getId()+"\",\n" +
+                    "        \"items\": [\n" +
+                    "            {\n" +
+                    "                \"id\":\""+book.getTourid()+"\",\n" +
+                    "                \"name\":\""+curTour2.getName()+"\",\n" +
+                    "                \"price\":"+totalStr+",\n" +
+                    "                \"type\":\"tour\",\n" +
+                    "                \"url\":\"http://www.celhumtralvel/tour/"+book.getTourid()+"\",\n" +
+                    "                \"quantity\":"+totalPassenger+"\n" +
+                    "            }\n" +
+                    "        ]\n" +
+                    "    },\n" +
+//                "    \"sellers\":[\n" +
+//                "        {\n" +
+//                "            \"id\":\""+kredivoCheckout.getSellers().get(0).getId()+"\",\n" +
+//                "            \"name\":\""+kredivoCheckout.getSellers().get(0).getName()+"\",\n" +
+//                "            \"email\": \""+kredivoCheckout.getSellers().get(0).getEmail()+"\",\n" +
+//                "            \"address\" : {\n" +
+//                "                \"first_name\":\""+kredivoCheckout.getSellers().get(0).getAddress().getFirst_name()+"\",\n" +
+//                "                \"last_name\":\""+kredivoCheckout.getSellers().get(0).getAddress().getLast_name()+"\",\n" +
+//                "                \"address\":\""+kredivoCheckout.getSellers().get(0).getAddress().getAddress()+"\",\n" +
+//                "                \"city\":\""+kredivoCheckout.getSellers().get(0).getAddress().getCity()+"\",\n" +
+//                "                \"postal_code\":\""+kredivoCheckout.getSellers().get(0).getAddress().getPostal_code()+"\",\n" +
+//                "                \"phone\":\""+kredivoCheckout.getSellers().get(0).getAddress().getPhone()+"\",\n" +
+//                "                \"country_code\":\""+kredivoCheckout.getSellers().get(0).getAddress().getCountry_code()+"\"\n" +
+//                "            }  \n" +
+//                "        }\n" +
+//                "    ],\n" +
+                    "    \"customer_details\":{\n" +
+                    "        \"first_name\":\""+book.getContactdetail().getFirst_name()+"\",\n" +
+                    "        \"last_name\":\""+book.getContactdetail().getLast_name()+"\",\n" +
+                    "        \"email\":\""+book.getContactdetail().getEmail()+"\",\n" +
+                    "        \"phone\":\""+book.getContactdetail().getHandphonenumber()+"\"\n" +
+                    "    },\n" +
+//                "    \"billing_address\": {\n" +
+//                "        \"first_name\":\""+kredivoCheckout.getBilling_address().getFirst_name()+"\",\n" +
+//                "        \"last_name\":\""+kredivoCheckout.getBilling_address().getLast_name()+"\",\n" +
+//                "        \"address\":\""+kredivoCheckout.getBilling_address().getAddress()+"\",\n" +
+//                "        \"city\":\""+kredivoCheckout.getBilling_address().getCity()+"\",\n" +
+//                "        \"postal_code\":\""+kredivoCheckout.getBilling_address().getPostal_code()+"\",\n" +
+//                "        \"phone\":\""+kredivoCheckout.getBilling_address().getPhone()+"\",\n" +
+//                "        \"country_code\":\""+kredivoCheckout.getBilling_address().getCountry_code()+"\"\n" +
+//                "    },\n" +
+//                "    \"shipping_address\": {\n" +
+//                "        \"first_name\":\""+kredivoCheckout.getShipping_address().getFirst_name()+"\",\n" +
+//                "        \"last_name\":\""+kredivoCheckout.getShipping_address().getLast_name()+"\",\n" +
+//                "        \"address\":\""+kredivoCheckout.getShipping_address().getAddress()+"\",\n" +
+//                "        \"city\":\""+kredivoCheckout.getShipping_address().getCity()+"\",\n" +
+//                "        \"postal_code\":\""+kredivoCheckout.getShipping_address().getPostal_code()+"\",\n" +
+//                "        \"phone\":\""+kredivoCheckout.getShipping_address().getPhone()+"\",\n" +
+//                "        \"country_code\":\""+kredivoCheckout.getShipping_address().getCountry_code()+"\"\n" +
+//                "    },\n" +
+                    "    \"push_uri\":\"http://43.231.128.207:8443/kredivo/notif\",\n" +
+                    "    \"back_to_store_uri\":\"http://www.celhumtravel.com\"\n" +
+                    "}";
+//        return input3;
 
-        //end of kredivo section
+            // set headers
+            HttpHeaders headers2 = new HttpHeaders();
+            headers2.setContentType(MediaType.APPLICATION_JSON);
+            //headers2.set("Authorization", "Basic " + "xxxxxxxxxxxx");
+            HttpEntity<String> entity2 = new HttpEntity<String>(input3, headers2);
+
+            // send request and parse result
+            ResponseEntity<KredivoCheckoutResponse> response2 = restTemplate2
+                    .exchange(URL_SANDBOX_KREDIVO +"/v2/checkout_url", HttpMethod.POST, entity2, KredivoCheckoutResponse.class);
+
+            ObjectMapper mapper = new ObjectMapper();
+//            KredivoCheckoutResponse kredivoCheckoutResponse = mapper.readValue(response2.toString(),KredivoCheckoutResponse.class);
+
+            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response2.getBody().getRedirect_url(),"h"), HttpStatus.OK);
+        }
+        else if(book.getPayment_method().equals("Midtrans")){
+            //KREDIVO SECTION #POST PAYMENT
+//            final String uri = "https://app.midtrans.com/snap/v1/transactions";
+            final String uri = "https://app.sandbox.midtrans.com/snap/v1/transactions"; //sandbox
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
+            String input = "{\n" +
+                    "  \"transaction_details\": {\n" +
+                    "    \"order_id\": \""+book.getId()+"\",\n" +
+                    "    \"gross_amount\": "+totalStr+"\n" +
+                    "  },\n" +
+                    "  \"item_details\": [{\n" +
+                    "    \"price\": "+totalStr+",\n" +
+                    "    \"quantity\": "+totalPassenger+",\n" +
+                    "    \"name\": \""+curTour2.getName()+"\",\n" +
+                    "    \"merchant_name\": \"Celhum Travel\"\n" +
+                    "  }]\n" +
+                    "}";
+
+            // set headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Basic VlQtc2VydmVyLVZYOFFXSFBxV1hZUUFIZ0twZjVWYTE0Vzo="); //sandbox
+            headers.set("Accept","application/json");
+
+            HttpEntity<String> entity = new HttpEntity<String>(input, headers);
+
+            // send request and parse result
+            ResponseEntity<KredivoCheckoutResponse> response = restTemplate
+                    .exchange(uri+"/v2/checkout_url", HttpMethod.POST, entity, KredivoCheckoutResponse.class);
+
+            ObjectMapper mapper = new ObjectMapper();
+//            KredivoCheckoutResponse kredivoCheckoutResponse = mapper.readValue(response2.toString(),KredivoCheckoutResponse.class);
+
+            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response.getBody().getRedirect_url(),"h"), HttpStatus.OK);
+        }
 
 //        return new ResponseEntity<ProjectStatus>(new ProjectStatus("Succeed... "+adultAmount +" * "+priceAdult +" = "+adultTotal+", child = "+childAmount+" * "+priceChild +" = "+childTotal + extrabedTotal + singlesupTotal,totalStr), HttpStatus.OK);
         return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+dateToString,totalStr), HttpStatus.OK);
