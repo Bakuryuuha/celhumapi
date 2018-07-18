@@ -25,8 +25,24 @@ public class KredivoController {
     ResponseEntity<ProjectStatus> NotifKredivo(@RequestBody KredivoConfirmPurchase kredivoConfirmPurchase){
 
         Booking curBook = bookingRepository.findBookingById(kredivoConfirmPurchase.getOrder_id());
-        curBook.setBookstatus(kredivoConfirmPurchase.getTransaction_status());
+        if(curBook == null){
+            return new ResponseEntity<ProjectStatus>(new ProjectStatus("BAD","Order Id not found"), HttpStatus.OK);
+        }
 
+        // set headers for sending update notif
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.set("Authorization", "Basic VlQtc2VydmVyLVZYOFFXSFBxV1hZUUFIZ0twZjVWYTE0Vzo="); //sandbox
+//        headers.set("Accept","application/json");
+
+        HttpEntity<String> entity = new HttpEntity<String>(headers);
+
+        // send request and parse result
+        ResponseEntity<KredivoCheckoutResponse> response = restTemplate
+                .exchange(URL_SANDBOX_KREDIVO+"/v2/update?transaction_id="+ kredivoConfirmPurchase.getTransaction_id()+"&signature_key="+kredivoConfirmPurchase.getSignature_key(), HttpMethod.GET, entity, KredivoCheckoutResponse.class);
+
+        curBook.setBookstatus(kredivoConfirmPurchase.getTransaction_status());
         Booking.Kredivopayment kredivopayment = new Booking.Kredivopayment();
         kredivopayment.setTransaction_id(kredivoConfirmPurchase.getTransaction_id());
         kredivopayment.setSignature_key(kredivoConfirmPurchase.getSignature_key());
@@ -34,20 +50,7 @@ public class KredivoController {
         curBook.setKredivopayment(kredivopayment);
         bookingRepository.save(curBook);
 
-        // set headers
-//        RestTemplate restTemplate = new RestTemplate();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.set("Authorization", "Basic VlQtc2VydmVyLVZYOFFXSFBxV1hZUUFIZ0twZjVWYTE0Vzo="); //sandbox
-//        headers.set("Accept","application/json");
-//
-//        HttpEntity<String> entity = new HttpEntity<String>(headers);
-//
-//        // send request and parse result
-//        ResponseEntity<KredivoCheckoutResponse> response = restTemplate
-//                .exchange(URL_SANDBOX_KREDIVO+"/v2/checkout_url", HttpMethod.POST, entity, KredivoCheckoutResponse.class);
-
-        return new ResponseEntity<ProjectStatus>(new ProjectStatus("sukses","good"), HttpStatus.OK);
+        return new ResponseEntity<ProjectStatus>(new ProjectStatus("OK","Order id found"), HttpStatus.OK);
     }
 
     @PostMapping("/updatenotif")

@@ -65,9 +65,9 @@ public class TourListServiceImpl implements TourListService{
     @Override
     public TourList findByCodeDepart(String code) {
 
-
-        Criteria criteria = new Criteria();
-        criteria.orOperator(Criteria.where("departure.code").is(code),Criteria.where("departure.price.$").is(code));
+//
+//        Criteria criteria = new Criteria();
+//        criteria.orOperator(Criteria.where("departure.code").is(code),Criteria.where("departure.price.$").is(code));
 
         BasicQuery query1 = new BasicQuery("{\"departure.code\":\""+code+"\"}");
 
@@ -78,8 +78,9 @@ public class TourListServiceImpl implements TourListService{
 
         TourList tourList = mongoTemplate.findOne(query1, TourList.class,"tourlist");
 
-        List<TourList> tourList2 = mongoTemplate.find(query1.limit(1),TourList.class,"tourlist");
+//        List<TourList> tourList2 = mongoTemplate.find(query1.limit(1),TourList.class,"tourlist");
         return tourList;
+//        return tourListRepository.findTourListByDepartureCode(code);
     }
 
     @Override

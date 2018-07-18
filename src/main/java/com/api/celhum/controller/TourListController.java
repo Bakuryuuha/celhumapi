@@ -68,6 +68,12 @@ public class TourListController {
         return tourListService.findTourListByCountry(name);
     }
 
+    @GetMapping("/promo/all")
+    public @ResponseBody
+    List<TourList> GetListByPromo(@PathVariable(value = "name") String name){
+        return tourListService.findTourListByCountry(name);
+    }
+
     @GetMapping("/showdetail/{name}")
     public @ResponseBody
     TourList GetByUniqueId(@PathVariable(value = "name") String name){

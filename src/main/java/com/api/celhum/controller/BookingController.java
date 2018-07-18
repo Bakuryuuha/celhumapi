@@ -176,7 +176,7 @@ public class BookingController {
         Long childTotal = childAmount * Long.valueOf(priceChild);
         Long extrabedTotal = extraBedAmount * Long.valueOf(priceExtraBed);
         Long singlesupTotal = singleSupAmount * Long.valueOf(priceSingleSup);
-        Long totalPassenger = adultTotal + childTotal;
+        int totalPassenger = adultAmount + childAmount;
         Long grandTotal = adultTotal + childTotal + extrabedTotal + singlesupTotal + bookingRepository.countBookingsByBookstatusEquals("pending");
 //       return new ResponseEntity<ProjectStatus>(new ProjectStatus("Inside Looping "+adultAmount,name), HttpStatus.OK);
         // total = k * 9000000 + bookingRepository.countBookingByDepartdateIsBefore(today);
@@ -211,7 +211,7 @@ public class BookingController {
             restTemplate2.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
             String input3 = "{\n" +
-                    "    \"server_key\":\"8tLHIx8V0N6KtnSpS9Nbd6zROFFJH7\",\n" +
+                    "    \"server_key\":\"kE3QxGqa5k62TcQHeMJegTzGDegEN3\",\n" +
                     "    \"payment_type\":\"30_days\",  \n" +
                     "    \"transaction_details\": {\n" +
                     "        \"amount\":"+totalStr+",\n" +
@@ -246,7 +246,7 @@ public class BookingController {
                     "    \"customer_details\":{\n" +
                     "        \"first_name\":\""+book.getContactdetail().getFirst_name()+"\",\n" +
                     "        \"last_name\":\""+book.getContactdetail().getLast_name()+"\",\n" +
-                    "        \"email\":\""+book.getContactdetail().getEmail()+"\",\n" +
+                    "        \"email\":\""+book.getEmail()+"\",\n" +
                     "        \"phone\":\""+book.getContactdetail().getHandphonenumber()+"\"\n" +
                     "    },\n" +
 //                "    \"billing_address\": {\n" +
@@ -285,12 +285,12 @@ public class BookingController {
             ObjectMapper mapper = new ObjectMapper();
 //            KredivoCheckoutResponse kredivoCheckoutResponse = mapper.readValue(response2.toString(),KredivoCheckoutResponse.class);
 
-            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response2.getBody().getRedirect_url(),"h"), HttpStatus.OK);
+            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response2.getBody().getRedirect_url(),"kredivo"), HttpStatus.OK);
         }
         else if(book.getPayment_method().equals("Midtrans")){
             //KREDIVO SECTION #POST PAYMENT
-//            final String uri = "https://app.midtrans.com/snap/v1/transactions";
-            final String uri = "https://app.sandbox.midtrans.com/snap/v1/transactions"; //sandbox
+            final String uri = "https://app.midtrans.com/";
+//            final String uri = "https://app.sandbox.midtrans.com/"; //sandbox
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -307,22 +307,20 @@ public class BookingController {
                     "  }]\n" +
                     "}";
 
+            //return new ResponseEntity<ProjectStatus>(new ProjectStatus("a",input), HttpStatus.OK);
             // set headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Basic VlQtc2VydmVyLVZYOFFXSFBxV1hZUUFIZ0twZjVWYTE0Vzo="); //sandbox
+            headers.set("Authorization", "Basic TWlkLXNlcnZlci1USEViWFJOUUljeVE5Z3hmMEJxMTdEdlo6"); //sandbox
             headers.set("Accept","application/json");
 
             HttpEntity<String> entity = new HttpEntity<String>(input, headers);
 
             // send request and parse result
-            ResponseEntity<KredivoCheckoutResponse> response = restTemplate
-                    .exchange(uri+"/v2/checkout_url", HttpMethod.POST, entity, KredivoCheckoutResponse.class);
+            ResponseEntity<MidtransCheckoutResponse> response = restTemplate.exchange(uri+"/snap/v1/transactions", HttpMethod.POST, entity, MidtransCheckoutResponse.class);
 
-            ObjectMapper mapper = new ObjectMapper();
-//            KredivoCheckoutResponse kredivoCheckoutResponse = mapper.readValue(response2.toString(),KredivoCheckoutResponse.class);
 
-            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response.getBody().getRedirect_url(),"h"), HttpStatus.OK);
+            return new ResponseEntity<ProjectStatus>(new ProjectStatus(""+response.getBody().getRedirect_url(),"midtrans"), HttpStatus.OK);
         }
 
 //        return new ResponseEntity<ProjectStatus>(new ProjectStatus("Succeed... "+adultAmount +" * "+priceAdult +" = "+adultTotal+", child = "+childAmount+" * "+priceChild +" = "+childTotal + extrabedTotal + singlesupTotal,totalStr), HttpStatus.OK);

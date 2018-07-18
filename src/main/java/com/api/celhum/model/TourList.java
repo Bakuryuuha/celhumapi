@@ -14,7 +14,7 @@ public class TourList {
     String country;
     String status;
     String kuota;
-    String promo;
+    List<Promo> promo;
     //List<Date> departure_date;
     Price price;
     List<String>date_str;
@@ -144,6 +144,89 @@ public class TourList {
         this.date_str = date_str;
     }
 
+    public static class Promo{
+        String statuspromo;
+        String namapromo;
+        String hargapromo;
+        String kodepromo;
+        Date startpromo;
+        Date endpromo;
+        String kuotapromo;
+        String diskonpromo;
+        String bannerpromo;
+
+        public String getBannerpromo() {
+            return bannerpromo;
+        }
+
+        public void setBannerpromo(String bannerpromo) {
+            this.bannerpromo = bannerpromo;
+        }
+
+        public String getDiskonpromo() {
+            return diskonpromo;
+        }
+
+        public void setDiskonpromo(String diskonpromo) {
+            this.diskonpromo = diskonpromo;
+        }
+
+        public String getStatuspromo() {
+            return statuspromo;
+        }
+
+        public void setStatuspromo(String statuspromo) {
+            this.statuspromo = statuspromo;
+        }
+
+        public String getNamapromo() {
+            return namapromo;
+        }
+
+        public void setNamapromo(String namapromo) {
+            this.namapromo = namapromo;
+        }
+
+        public String getHargapromo() {
+            return hargapromo;
+        }
+
+        public void setHargapromo(String hargapromo) {
+            this.hargapromo = hargapromo;
+        }
+
+        public String getKodepromo() {
+            return kodepromo;
+        }
+
+        public void setKodepromo(String kodepromo) {
+            this.kodepromo = kodepromo;
+        }
+
+        public Date getStartpromo() {
+            return startpromo;
+        }
+
+        public void setStartpromo(Date startpromo) {
+            this.startpromo = startpromo;
+        }
+
+        public Date getEndpromo() {
+            return endpromo;
+        }
+
+        public void setEndpromo(Date endpromo) {
+            this.endpromo = endpromo;
+        }
+
+        public String getKuotapromo() {
+            return kuotapromo;
+        }
+
+        public void setKuotapromo(String kuotapromo) {
+            this.kuotapromo = kuotapromo;
+        }
+    }
     public static class Departure{
         public static class Price{
             String price_adult;
@@ -401,13 +484,5 @@ public class TourList {
 
     public void setKuota(String kuota) {
         this.kuota = kuota;
-    }
-
-    public String getPromo() {
-        return promo;
-    }
-
-    public void setPromo(String promo) {
-        this.promo = promo;
     }
 }

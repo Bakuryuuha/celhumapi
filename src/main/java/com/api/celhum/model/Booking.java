@@ -113,6 +113,7 @@ public class Booking {
         String last_name;
         String identity_type;
         String identity_number;
+        Date identity_expiry;
         Date dob;
         String passenger_type;
         boolean passenger_addon;
@@ -120,7 +121,7 @@ public class Booking {
         public PassengerDetail(){}
 
         @JsonCreator
-        public PassengerDetail(@JsonProperty("first_name")String first_name,@JsonProperty("last_name") String last_name,@JsonProperty("identity_type") String identity_type,@JsonProperty("identity_number") String identity_number,@JsonProperty("dob2") Date dob, @JsonProperty("passenger_type") String passenger_type,@JsonProperty("passenger_addon") boolean passenger_addon) {
+        public PassengerDetail(@JsonProperty("first_name")String first_name,@JsonProperty("last_name") String last_name,@JsonProperty("identity_type") String identity_type,@JsonProperty("identity_number") String identity_number,@JsonProperty("dob2") Date dob, @JsonProperty("passenger_type") String passenger_type,@JsonProperty("passenger_addon") boolean passenger_addon, @JsonProperty("identity_expiry") String identity_expiry) {
             this.first_name = first_name;
             this.last_name = last_name;
             this.identity_type = identity_type;
@@ -128,6 +129,14 @@ public class Booking {
             this.dob = dob;
             this.passenger_type = passenger_type;
             this.passenger_addon = passenger_addon;
+        }
+
+        public Date getIdentity_expiry() {
+            return identity_expiry;
+        }
+
+        public void setIdentity_expiry(Date identity_expiry) {
+            this.identity_expiry = identity_expiry;
         }
 
         public boolean isPassenger_addon() {
@@ -208,8 +217,70 @@ public class Booking {
         }
     }
 
-    public static class Midtrans{
+    public static class Midtranspayment{
+        String transaction_time;
+        String bank;
+        String gross_amount;
+        String payment_type;
+        String status_code;
+        String transaction_status;
+        String transaction_id;
 
+        public String getTransaction_time() {
+            return transaction_time;
+        }
+
+        public void setTransaction_time(String transaction_time) {
+            this.transaction_time = transaction_time;
+        }
+
+        public String getBank() {
+            return bank;
+        }
+
+        public void setBank(String bank) {
+            this.bank = bank;
+        }
+
+        public String getGross_amount() {
+            return gross_amount;
+        }
+
+        public void setGross_amount(String gross_amount) {
+            this.gross_amount = gross_amount;
+        }
+
+        public String getPayment_type() {
+            return payment_type;
+        }
+
+        public void setPayment_type(String payment_type) {
+            this.payment_type = payment_type;
+        }
+
+        public String getStatus_code() {
+            return status_code;
+        }
+
+        public void setStatus_code(String status_code) {
+            this.status_code = status_code;
+        }
+
+        public String getTransaction_status() {
+            return transaction_status;
+        }
+
+        public void setTransaction_status(String transaction_status) {
+            this.transaction_status = transaction_status;
+        }
+
+        public String getTransaction_id() {
+            return transaction_id;
+        }
+
+        public void setTransaction_id(String transaction_id) {
+            this.transaction_id = transaction_id;
+        }
     }
     @Id
     String id;
@@ -234,10 +305,17 @@ public class Booking {
     Date starttransdate;
     Date endtransdate;
     String payment_method;
-
-
+    Midtranspayment midtranspayment;
     Kredivopayment kredivopayment;
-    Midtrans midtrans;
+
+
+    public Midtranspayment getMidtranspayment() {
+        return midtranspayment;
+    }
+
+    public void setMidtranspayment(Midtranspayment midtranspayment) {
+        this.midtranspayment = midtranspayment;
+    }
 
     public Kredivopayment getKredivopayment() {
         return kredivopayment;
@@ -245,14 +323,6 @@ public class Booking {
 
     public void setKredivopayment(Kredivopayment kredivopayment) {
         this.kredivopayment = kredivopayment;
-    }
-
-    public Midtrans getMidtrans() {
-        return midtrans;
-    }
-
-    public void setMidtrans(Midtrans midtrans) {
-        this.midtrans = midtrans;
     }
 
     public String getPayment_method() {
